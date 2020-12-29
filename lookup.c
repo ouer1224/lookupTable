@@ -14,9 +14,7 @@ typedef struct  _tcb_soc_dymic
 typedef struct _tcb_soc3D_dymic
 {
 	uint16_t temp[3];
-	tcb_soc_dymic *pr_25T;
-	tcb_soc_dymic *pr_45T;	
-	tcb_soc_dymic *pr_60T;	
+	tcb_soc_dymic *pr_T[3];	
 }tcb_soc3D_dymic;
 
 
@@ -208,9 +206,11 @@ tcb_soc3D_dymic soc_in3Dtable_dymic=
 	{
 		250,450,600
 	},
+	{
 	&s_table_soc_dymic25T,
 	&s_table_soc_dymic45T,
 	&s_table_soc_dymic60T
+	}
 };
 
 
@@ -243,7 +243,7 @@ uint8_t __lookupTable(tcb_soc_dymic *pr,
 	
 	lenx=sizeof(pr->vol_table)/(sizeof(pr->vol_table[0]));
 	
-	printf("lenx=%d cur=%d\n",lenx,cur);
+	printf("\n\nvol=%d cur=%d\n\n",vol,cur);
 	
 	for(i=0;i<lenx;i++)
 	{
@@ -316,6 +316,7 @@ uint8_t __lookup3DTable(tcb_soc3D_dymic *pr,
 	uint8_t soc_temp1=0,soc_temp2=0;
 	uint8_t pos_temp1=0,pos_temp2=0;
 	uint16_t tmp=0;
+	tcb_soc_dymic *prdest=NULL;
 	len=sizeof(pr->temp)/sizeof(pr->temp[0]);
 	for(i=0;i<len;i++)
 	{
@@ -335,14 +336,14 @@ uint8_t __lookup3DTable(tcb_soc3D_dymic *pr,
 	
 	printf("pos_temp2=%d pos_temp1=%d \n",pos_temp2,pos_temp1);
 	
-	soc_temp1=__lookupTable(pr->pr_25T+pos_temp1,vol,temp);
-	
-	soc_temp2=__lookupTable(pr->pr_25T+pos_temp2,vol,temp);
+	prdest=pr->pr_T[pos_temp1];
+	soc_temp1=__lookupTable(prdest,vol,cur);
+	prdest=pr->pr_T[pos_temp2];
+	soc_temp2=__lookupTable(prdest,vol,cur);
 	
 	soc_dest=getMidVal(soc_temp1,soc_temp2,
 			pr->temp[pos_temp2]-pr->temp[pos_temp1],
 			temp-pr->temp[pos_temp1]);
-	
 	
 	printf("soc1=%d soc2=%d\n",soc_temp1,soc_temp2);
 	
@@ -356,16 +357,16 @@ int main(int argc, char *argv[])
 {
 
 	uint8_t soc_dest=0;
-	uint8_t soc_temp25=0,soc_temp45=0;
+	uint8_t soc_temp25=0,soc_temp45=0,soc_temp60=0;
 	
 #if 0	
-	soc_temp25=__lookupTable(&s_table_soc_dymic45T,3190,250);
-	soc_temp45=__lookupTable(&s_table_soc_dymic25T,3190,250);	
+	soc_temp45=__lookupTable(&s_table_soc_dymic45T,3190,250);
+	soc_temp60=__lookupTable(&s_table_soc_dymic60T,3190,250);	
 	
-	printf("soc45=%f ",soc_temp25/25.0);
-	printf("soc25=%f ",soc_temp45/25.0);
+	printf("soc45=%f ",soc_temp45/25.0);
+	printf("soc60=%f ",soc_temp60/25.0);
 	
-	soc_dest=getMidVal(soc_temp45,soc_temp25,45-25,25-25);
+	soc_dest=getMidVal(soc_temp45,soc_temp60,60-45,45-45);
 #else	
 
 	soc_dest=__lookup3DTable(&soc_in3Dtable_dymic,3190,250,450);	
