@@ -3,6 +3,14 @@
 #define  uint8_t unsigned char
 #define  uint16_t unsigned short
 
+#define xep100
+
+#ifndef xep100
+	#define os_printf(...)	printf(__VA_ARGS__)
+#else
+	#define os_printf(...)
+#endif
+
 
 typedef struct  _tcb_soc_dymic
 {
@@ -16,6 +24,24 @@ typedef struct _tcb_soc3D_dymic
 	uint16_t temp[3];
 	tcb_soc_dymic *pr_T[3];	
 }tcb_soc3D_dymic;
+
+
+typedef struct _tcb_commont_table
+{
+	uint8_t type;	/*0x00+8-uint8_t,0x80+8-int8_t,
+					0x00+16-uint16_t,0x80+16-int16_t
+					0x00+32-uint32_t,0x80+32-int32_t
+					0x00+64-uint64_t,0x80+64-int64_t
+					0x80+32+0x01-float,
+					0x80+64+0x01-double,
+					*/
+	void * pdat;
+	
+	
+}tcb_commont_table;
+
+
+
 
 
 
@@ -198,6 +224,36 @@ const tcb_soc_dymic s_table_soc_dymic60T = {
 };
 
 
+//
+//const ConstP rtConstP = {
+//	
+//	/*在电压点时,下面对应的修正电压*/
+//	{ 3186, 3199, 3224 },//x
+//	
+//	/*静止时间*/
+//  { 20, 30, 45, 60, 120, 180, 240, 300, 420, 480, 540, 600, 660,
+//    720, 780, 1000, 1800, 3600 },	//y
+//	
+//
+//	
+//	/*静止时间--->修正电压*/
+//  { 13, 12, 12, 12, 11, 9, 8, 7, 6, 5, 5, 4,
+//    4, 4, 4, 3, 2, 0, 
+//	
+//	16, 14, 13, 12, 10, 8,
+//    7, 6, 5, 5, 4, 4, 4, 4, 3, 3, 1, 0,
+//	
+//    13, 12, 12, 12, 11, 9, 8, 7, 6, 5, 5, 4,
+//    4, 4, 4, 3, 2, 0 },
+//	
+//
+//
+//	/*静止后的电压对应的soc(/250)*/
+//   
+//	{ 2665, 3084, 3200, 3212, 3237, 3255, 3272 },//电压
+//	{ 0, 13, 25, 38, 50, 63, 75 }//soc
+//
+//};
 
 
 
@@ -243,7 +299,7 @@ uint8_t __lookupTable(tcb_soc_dymic *pr,
 	
 	lenx=sizeof(pr->vol_table)/(sizeof(pr->vol_table[0]));
 	
-	printf("\n\nvol=%d cur=%d\n\n",vol,cur);
+	os_printf("\n\nvol=%d cur=%d\n\n",vol,cur);
 	
 	for(i=0;i<lenx;i++)
 	{
@@ -284,7 +340,7 @@ uint8_t __lookupTable(tcb_soc_dymic *pr,
 	valx2y1=pr->soc_in_T[posx2][posy1];
 	valx2y2=pr->soc_in_T[posx2][posy2];	
 
-	printf("valx1y1=%f valx1y2=%f valx2y1=%f valx2y2=%f\n",
+	os_printf("valx1y1=%f valx1y2=%f valx2y1=%f valx2y2=%f\n",
 		valx1y1/250.0,valx1y2/250.0,valx2y1/250.0,valx2y2/250.0);
 
 
@@ -302,7 +358,7 @@ uint8_t __lookupTable(tcb_soc_dymic *pr,
 					cur-pr->cur_table[posx1]);
 
 	
-	printf("-val_dest=%d\n",val_dest);
+	os_printf("-val_dest=%d\n",val_dest);
 	
 	return val_dest;	
 }
@@ -336,7 +392,7 @@ uint8_t __lookup3DTable(tcb_soc3D_dymic *pr,
 		pos_temp2=i;
 		pos_temp1=i-1;
 		
-		printf("pos_temp2=%d pos_temp1=%d \n",pos_temp2,pos_temp1);
+		os_printf("pos_temp2=%d pos_temp1=%d \n",pos_temp2,pos_temp1);
 		
 		prdest=pr->pr_T[pos_temp1];
 		soc_temp1=__lookupTable(prdest,vol,cur);
@@ -354,7 +410,7 @@ uint8_t __lookup3DTable(tcb_soc3D_dymic *pr,
 				pr->temp[pos_temp2]-pr->temp[pos_temp1],
 				temp-pr->temp[pos_temp1]);
 		
-		printf("soc1=%d soc2=%d\n",soc_temp1,soc_temp2);
+		os_printf("soc1=%d soc2=%d\n",soc_temp1,soc_temp2);
 	}
 	else
 	{
@@ -392,8 +448,8 @@ int main(int argc, char *argv[])
 	soc_temp45=__lookupTable(&s_table_soc_dymic45T,3190,250);
 	soc_temp60=__lookupTable(&s_table_soc_dymic60T,3190,250);	
 	
-	printf("soc45=%f ",soc_temp45/25.0);
-	printf("soc60=%f ",soc_temp60/25.0);
+	os_printf("soc45=%f ",soc_temp45/25.0);
+	os_printf("soc60=%f ",soc_temp60/25.0);
 	
 	soc_dest=getMidVal(soc_temp45,soc_temp60,60-45,45-45);
 #else	
@@ -402,7 +458,7 @@ int main(int argc, char *argv[])
 	soc_dest=soc_from_dymicTable(3190,250,450);	
 #endif	
 		
-	printf("soc_dest=%f\n",soc_dest/250.0);
+	os_printf("soc_dest=%f\n",soc_dest/250.0);
 
 	return 0;
 }
